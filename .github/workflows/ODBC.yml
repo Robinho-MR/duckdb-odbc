@@ -258,7 +258,7 @@ jobs:
   odbc-windows-amd64:
     name: Windows (amd64)
     if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'vendoring-') }}
-    runs-on: ${{ github.repository_owner == 'duckdb' && 'namespace-profile-windows-x64' || 'windows-latest' }}
+    runs-on: ${{ github.repository_owner == 'duckdb' && 'namespace-profile-windows-x64' || 'windows-2022' }}
     needs: odbc-linux-amd64
     env:
       CC: 'ccache cl'
@@ -418,7 +418,7 @@ jobs:
   odbc-windows-arm64:
     name: Windows (aarch64)
     if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'vendoring-') }}
-    runs-on: ${{ github.repository_owner == 'duckdb' && 'namespace-profile-windows-x64' || 'windows-latest' }}
+    runs-on: ${{ github.repository_owner == 'duckdb' && 'namespace-profile-windows-x64' || 'windows-2022' }}
     needs: odbc-linux-amd64
     env:
       CC: 'ccache cl'
@@ -726,7 +726,7 @@ jobs:
   debug:
     name: Debug Tests
     if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'vendoring-') }}
-    runs-on: ${{ github.repository_owner == 'duckdb' && 'namespace-profile-linux-x64' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository_owner == 'duckdb' && 'namespace-profile-linux-x64' || 'ubuntu-24.04' }}
     needs: odbc-linux-amd64
     env:
       GEN: ninja
