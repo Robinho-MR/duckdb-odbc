@@ -6,7 +6,7 @@
 
 #include "duckdb_odbc.hpp"
 
-namespace duckdb {
+namespace duckdb_odbc {
 namespace widechar {
 
 DUCKDB_API std::vector<SQLCHAR> utf16_to_utf8_lenient(const SQLWCHAR *in_buf, size_t in_buf_len,
@@ -45,6 +45,6 @@ public:
 };
 
 } // namespace widechar
-} // namespace duckdb
+} // namespace duckdb_odbc
 
 #endif // WIDECHAR_HPP 

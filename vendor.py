@@ -1,74 +1,93 @@
-import os
-import sys
-import json
-import pickle
-import platform
+"""Vendors DuckDB's stable C++ API package into third_party/duckdb_cpp.
+
+The ODBC driver is written against the stable C++ API (`duckdb::cxx`), which is a header plus one source file that
+wrap the DuckDB C API. Only those files and the C API headers they need are vendored; the engine itself is linked from
+a DuckDB build of the same revision (see scripts/build_duckdb.py). The revision is recorded in
+third_party/duckdb_cpp/duckdb_revision.cmake so that the build can fetch the matching engine.
+"""
+
 import argparse
+import os
+import re
+import shutil
+import subprocess
+import sys
 
-def sanitize_path(x):
-    return x.replace('\\', '/')
+PACKAGE_FILES = [
+    ('tools/cpp/duckdb_cpp.hpp', 'duckdb_cpp.hpp'),
+    ('tools/cpp/duckdb_cpp.cpp', 'duckdb_cpp.cpp'),
+    ('src/include/duckdb_v2.h', 'duckdb_v2.h'),
+    ('src/include/duckdb_extension_v2.h', 'duckdb_extension_v2.h'),
+    ('LICENSE', 'LICENSE'),
+]
 
-parser = argparse.ArgumentParser(description='Inlines DuckDB Sources')
 
-parser.add_argument('--duckdb', action='store',
-                    help='Path to the DuckDB Version to be vendored in', required=True, type=str)
+def git(duckdb_dir, *args):
+    return subprocess.check_output(['git', '-C', duckdb_dir] + list(args), universal_newlines=True).strip()
 
-args = parser.parse_args()
 
-# list of extensions to bundle
-extensions = ['core_functions', 'parquet', 'icu', 'json']
+def duckdb_version(duckdb_dir):
+    # Same scheme as DuckDB's own build: the last release tag, plus a dev suffix for commits after it.
+    override = os.environ.get('OVERRIDE_GIT_DESCRIBE', '')
+    if override:
+        return override.split('-0-g')[0] if '-0-g' in override else override
+    try:
+        describe = git(duckdb_dir, 'describe', '--tags', '--long', '--match', 'v*.*.*')
+    except subprocess.CalledProcessError:
+        return 'v0.0.1'
+    match = re.fullmatch(r'v(\d+)\.(\d+)\.(\d+)-(\d+)-g[0-9a-f]+', describe)
+    if not match:
+        return 'v0.0.1'
+    major, minor, patch, distance = (int(x) for x in match.groups())
+    if distance == 0:
+        return f'v{major}.{minor}.{patch}'
+    return f'v{major}.{minor + 1}.0-dev{distance}'
 
-# path to target
-basedir = os.getcwd()
-target_dir = os.path.join(basedir, 'src', 'duckdb')
 
-# path to package_build.py
-os.chdir(os.path.join(args.duckdb))
-scripts_dir = 'scripts'
+def main():
+    parser = argparse.ArgumentParser(description='Vendors the DuckDB stable C++ API package')
+    parser.add_argument('--duckdb', required=True, help='Path to the DuckDB checkout to vendor from')
+    parser.add_argument(
+        '--repository',
+        default=None,
+        help='Git URL the engine is fetched from at build time (default: the checkout\'s origin remote)',
+    )
+    args = parser.parse_args()
 
-sys.path.append(scripts_dir)
-import package_build
+    duckdb_dir = os.path.abspath(args.duckdb)
+    target_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'third_party', 'duckdb_cpp')
 
-defines = ['DUCKDB_EXTENSION_{}_LINKED'.format(ext.upper()) for ext in extensions]
+    for source, _ in PACKAGE_FILES:
+        if not os.path.isfile(os.path.join(duckdb_dir, source)):
+            print(f'error: {source} not found in {duckdb_dir}; is it a DuckDB checkout with the C++ API?')
+            sys.exit(1)
 
-# fresh build - copy over all of the files
-(source_list, include_list, original_sources) = package_build.build_package(target_dir, extensions, False)
-source_list = [sanitize_path(x) for x in source_list]
-include_list = [sanitize_path(x) for x in include_list]
+    if os.path.isdir(target_dir):
+        shutil.rmtree(target_dir)
+    os.makedirs(target_dir)
+    for source, target in PACKAGE_FILES:
+        shutil.copyfile(os.path.join(duckdb_dir, source), os.path.join(target_dir, target))
 
-# process jemalloc separately with its own CMake vars
-jemalloc_source_list = [x for x in source_list if x.startswith("duckdb/third_party/jemalloc/")]
-jemalloc_include_list = [x for x in include_list if x.startswith("third_party/jemalloc/")]
+    sha = git(duckdb_dir, 'rev-parse', 'HEAD')
+    repository = args.repository
+    if repository is None:
+        try:
+            repository = git(duckdb_dir, 'remote', 'get-url', 'origin')
+        except subprocess.CalledProcessError:
+            repository = 'https://github.com/duckdb/duckdb.git'
+    if repository.startswith('git@github.com:'):
+        repository = 'https://github.com/' + repository[len('git@github.com:') :]
+    version = duckdb_version(duckdb_dir)
 
-# clean up paths
-source_list = [os.path.relpath(x, basedir) if os.path.isabs(x) else os.path.join('src', x)
-    for x in source_list if x not in jemalloc_source_list]
-source_list = [x.replace("/./", "/") for x in source_list]
-jemalloc_source_list = [os.path.relpath(x, basedir) if os.path.isabs(x) else os.path.join('src', x)
-    for x in jemalloc_source_list]
-jemalloc_source_list = [x for x in jemalloc_source_list if not x.endswith("jemalloc_cpp.cpp")]
-include_list = [os.path.join('src', 'duckdb', x) for x in include_list if x not in jemalloc_include_list]
-jemalloc_include_list = [os.path.join('src', 'duckdb', x) for x in jemalloc_include_list]
+    with open(os.path.join(target_dir, 'duckdb_revision.cmake'), 'w') as f:
+        f.write('# Generated by vendor.py: the DuckDB revision the vendored C++ API package was taken from.\n')
+        f.write('# The engine the driver links must be built from the same revision.\n')
+        f.write(f'set(DUCKDB_GIT_REPOSITORY "{repository}")\n')
+        f.write(f'set(DUCKDB_GIT_SHA "{sha}")\n')
+        f.write(f'set(DUCKDB_GIT_VERSION "{version}")\n')
 
-# sort paths
-source_list.sort()
-jemalloc_source_list.sort()
-include_list.sort()
-jemalloc_include_list.sort()
+    print(f'Vendored the DuckDB C++ API from {sha} ({version}) into {target_dir}')
 
-os.chdir(basedir)
 
-with open('CMakeLists.txt.in', 'r') as f:
-    cmake = f.read()
-
-def replace_entries(cmake, replacement_map):
-    cmake.replace()
-
-cmake = cmake.replace('${SOURCES}', '\n  '.join(source_list))
-cmake = cmake.replace('${JEMALLOC_SOURCES}', '\n  '.join(jemalloc_source_list))
-cmake = cmake.replace('${INCLUDES}', '\n  '.join(include_list))
-cmake = cmake.replace('${JEMALLOC_INCLUDES}', '\n  '.join(jemalloc_include_list))
-cmake = cmake.replace('${DEFINES}', '\n  '.join(['-D'+x for x in defines]))
-
-with open('CMakeLists.txt', 'w+') as f:
-    f.write(cmake)
+if __name__ == '__main__':
+    main()

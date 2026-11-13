@@ -104,8 +104,11 @@ jobs:
             cat /etc/os-release
             dnf install -y           \
               ccache                 \
+              git                    \
               ninja-build            \
+              python3                \
               unixODBC-devel
+            git config --global --add safe.directory '*'
             make -C /duckdb release
           "
     
@@ -197,8 +200,11 @@ jobs:
             cat /etc/os-release
             dnf install -y           \
               ccache                 \
+              git                    \
               ninja-build            \
+              python3                \
               unixODBC-devel
+            git config --global --add safe.directory '*'
             make -C /duckdb release
           "
 
@@ -294,12 +300,11 @@ jobs:
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-          mkdir build
-          cd build
-          mkdir release
-          cd release
-          cmake ../.. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release
-          cmake --build . --config Release
+          python scripts\build_duckdb.py --install-dir build\duckdb\install --generator "NMake Makefiles" || exit /b 1
+          mkdir build\release
+          cd build\release
+          cmake ../.. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DDUCKDB_ROOT=%GITHUB_WORKSPACE%\build\duckdb\install || exit /b 1
+          cmake --build . --config Release || exit /b 1
 
       - name: Save Cache
         uses: actions/cache/save@v4
@@ -453,12 +458,11 @@ jobs:
         shell: cmd
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsamd64_arm64.bat"
-          mkdir build
-          cd build
-          mkdir release
-          cd release
-          cmake ../.. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release
-          cmake --build . --config Release
+          python scripts\build_duckdb.py --install-dir build\duckdb\install --generator "NMake Makefiles" || exit /b 1
+          mkdir build\release
+          cd build\release
+          cmake ../.. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DDUCKDB_ROOT=%GITHUB_WORKSPACE%\build\duckdb\install || exit /b 1
+          cmake --build . --config Release || exit /b 1
 
       - name: Save Cache
         uses: actions/cache/save@v4

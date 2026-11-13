@@ -3,7 +3,7 @@
 
 #include "duckdb_odbc.hpp"
 
-namespace duckdb {
+namespace duckdb_odbc {
 class RowDescriptor {
 public:
 	explicit RowDescriptor(OdbcHandleStmt *stmt_ptr);
@@ -18,14 +18,14 @@ public:
 
 public:
 	// implicitly allocated descriptors
-	duckdb::unique_ptr<OdbcHandleDesc> ard;
-	duckdb::unique_ptr<OdbcHandleDesc> ird;
+	duckdb_odbc::unique_ptr<OdbcHandleDesc> ard;
+	duckdb_odbc::unique_ptr<OdbcHandleDesc> ird;
 
 private:
 	OdbcHandleStmt *stmt;
 	// pointer to the current ARD descriptor
 	OdbcHandleDesc *cur_ard;
 };
-} // namespace duckdb
+} // namespace duckdb_odbc
 
 #endif

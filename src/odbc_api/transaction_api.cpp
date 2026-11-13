@@ -4,7 +4,7 @@
 #include "odbc_utils.hpp"
 #include "handle_functions.hpp"
 
-using duckdb::SQLStateType;
+using duckdb_odbc::SQLStateType;
 
 //===--------------------------------------------------------------------===//
 // SQLEndTran
@@ -16,11 +16,11 @@ using duckdb::SQLStateType;
  */
 SQLRETURN SQL_API SQLEndTran(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALLINT completion_type) {
 	if (handle_type != SQL_HANDLE_DBC) { // theoretically this can also be done on env but no no no
-		return duckdb::SetDiagnosticRecord(static_cast<duckdb::OdbcHandle *>(handle), SQL_ERROR, "SQLEndTran",
+		return duckdb_odbc::SetDiagnosticRecord(static_cast<duckdb_odbc::OdbcHandle *>(handle), SQL_ERROR, "SQLEndTran",
 		                                   "Invalid handle type, must be SQL_HANDLE_DBC.", SQLStateType::ST_HY092, "");
 	}
 
-	duckdb::OdbcHandleDbc *dbc = nullptr;
+	duckdb_odbc::OdbcHandleDbc *dbc = nullptr;
 	SQLRETURN ret = ConvertConnection(handle, dbc);
 	if (ret != SQL_SUCCESS) {
 		return ret;
@@ -28,27 +28,21 @@ SQLRETURN SQL_API SQLEndTran(SQLSMALLINT handle_type, SQLHANDLE handle, SQLSMALL
 
 	switch (completion_type) {
 	case SQL_COMMIT:
-		// it needs to materialize the result set because ODBC can still fetch after a commit
-		if (dbc->MaterializeResult() != SQL_SUCCESS) {
+	case SQL_ROLLBACK:
+		// it needs to materialize the result sets because ODBC can still fetch after a commit
+		if (dbc->MaterializeResults() != SQL_SUCCESS) {
 			// for some reason we couldn't materialize the result set
 			return SQL_ERROR; // TODO add a proper error message
 		}
-		if (dbc->conn->IsAutoCommit()) {
-			return SQL_SUCCESS;
-		}
-		dbc->conn->Commit();
-		return SQL_SUCCESS;
-	case SQL_ROLLBACK:
 		try {
-			dbc->conn->Rollback();
+			dbc->EndTransaction(completion_type == SQL_COMMIT);
 			return SQL_SUCCESS;
 		} catch (std::exception &ex) {
-			duckdb::ErrorData parsed_error(ex);
-			return duckdb::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLEndTran", parsed_error.RawMessage(),
+			return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLEndTran", duckdb_odbc::RawErrorMessage(ex),
 			                                   SQLStateType::ST_HY115, dbc->GetDataSourceName());
 		}
 	default:
-		return duckdb::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLEndTran", "Invalid completion type.",
+		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLEndTran", "Invalid completion type.",
 		                                   SQLStateType::ST_HY012, dbc->GetDataSourceName());
 	}
 }

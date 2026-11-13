@@ -5,9 +5,17 @@
 
 #include "duckdb_odbc.hpp"
 
-namespace duckdb {
+namespace duckdb_odbc {
 
 void PrepareQuery(OdbcHandleStmt *hstmt);
+
+//! Prepares a parsed statement: for repeated execution (SQLPrepare), learning its parameter and result types, or
+//! to run it once (SQLExecDirect). A statement that fails to prepare carries the error.
+unique_ptr<OdbcPreparedStatement> PrepareStatement(OdbcHandleStmt *hstmt, unique_ptr<cxx::SqlStatement> statement,
+                                                   bool for_repeated_execution);
+
+//! SQLPrepare: prepares the single statement in `query`.
+SQLRETURN PrepareStmt(OdbcHandleStmt *hstmt, const string &query);
 
 SQLRETURN FinalizeStmt(OdbcHandleStmt *hstmt);
 
@@ -28,5 +36,5 @@ SQLRETURN BindParameterStmt(OdbcHandleStmt *hstmt, SQLUSMALLINT parameter_number
                             SQLLEN *str_len_or_ind_ptr);
 
 SQLRETURN CloseStmt(OdbcHandleStmt *hstmt);
-} // namespace duckdb
+} // namespace duckdb_odbc
 #endif

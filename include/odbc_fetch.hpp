@@ -1,16 +1,13 @@
 #ifndef ODBC_FETCH_HPP
 #define ODBC_FETCH_HPP
 
-#include "duckdb.hpp"
-#include "duckdb/common/windows.hpp"
+#include "odbc_common.hpp"
 
 #include <sqltypes.h>
 #include <sqlext.h>
 
-#include "duckdb/common/vector.hpp"
-#include "duckdb/common/stack.hpp"
 
-namespace duckdb {
+namespace duckdb_odbc {
 
 struct OdbcHandleStmt;
 
@@ -32,10 +29,18 @@ public:
 private:
 	OdbcHandleStmt *hstmt_ref;
 	// main structure to hold the fetched chunks
-	vector<duckdb::unique_ptr<DataChunk>> chunks;
+	vector<duckdb_odbc::unique_ptr<DataChunk>> chunks;
+	// the rows of the result, read from DuckDB when the statement is executed, see Prefetch
+	duckdb_odbc::unique_ptr<cxx::ColumnDataCollection> collection;
+	duckdb_odbc::unique_ptr<cxx::ColumnDataCollection::AppendState> append_state;
+	duckdb_odbc::unique_ptr<cxx::ColumnDataCollection::SharedScanState> shared_scan;
+	duckdb_odbc::unique_ptr<cxx::ColumnDataCollection::WorkerScanState> worker_scan;
+	vector<LogicalType> collection_types;
+	// the result was read to its end by Prefetch, but is kept for its metadata until the next read releases it
+	bool result_exhausted = false;
 	// used by fetch prior
-	duckdb::idx_t current_chunk_idx;
-	duckdb::DataChunk *current_chunk;
+	duckdb_odbc::idx_t current_chunk_idx;
+	duckdb_odbc::DataChunk *current_chunk;
 	row_t chunk_row;
 	row_t prior_chunk_row;
 
@@ -52,7 +57,7 @@ public:
 	~OdbcFetch();
 
 	inline void AssertCurrentChunk() {
-		D_ASSERT(chunk_row <= ((row_t)current_chunk->size()));
+		D_ASSERT(chunk_row <= ((row_t)current_chunk->GetRowCount()));
 	}
 
 	SQLRETURN Fetch(OdbcHandleStmt *hstmt, SQLULEN fetch_orientation, SQLLEN fetch_offset);
@@ -63,11 +68,25 @@ public:
 
 	SQLRETURN DummyFetch();
 
-	SQLRETURN GetValue(SQLUSMALLINT col_idx, Value &value);
+	//! The value of a column in the current row. Requires a current chunk.
+	Value GetValue(SQLUSMALLINT col_idx);
+	bool HasCurrentChunk() const {
+		return current_chunk != nullptr;
+	}
 
 	void ClearChunks();
 
+	//! Releases the statement's result, which Prefetch read in full, so that the connection can run another
+	//! statement while this one is still being fetched from.
 	SQLRETURN Materialize(OdbcHandleStmt *hstmt);
+
+	//! Reads the result of a statement that was just executed into memory, as the chunks of a collection that are
+	//! then fetched from: DuckDB runs a statement as its result is read, so this is what executes it, and reports its
+	//! errors. The rows come in chunks of whatever size the query produced them in; the collection packs them into
+	//! full chunks, which fetching relies on to fill whole rowsets. The result is kept so that its metadata can still
+	//! be read; ReleaseIfExhausted then releases it.
+	SQLRETURN Prefetch(OdbcHandleStmt *hstmt);
+	void ReleaseIfExhausted(OdbcHandleStmt *hstmt);
 
 	void ResetLastFetchedVariableVal();
 	void SetLastFetchedVariableVal(row_t col_idx);
@@ -84,12 +103,17 @@ private:
 	SQLRETURN RowWise(OdbcHandleStmt *hstmt);
 
 	inline bool RequireFetch() {
-		return (chunks.empty() || (chunk_row >= ((duckdb::row_t)chunks.back()->size()) - 1));
+		return (chunks.empty() || (chunk_row >= ((duckdb_odbc::row_t)chunks.back()->GetRowCount()) - 1));
 	}
 
 	void IncreaseRowCount();
 
 	SQLRETURN FetchNext(OdbcHandleStmt *hstmt);
+
+	//! The next chunk of the result; null at its end. Throws on error.
+	duckdb_odbc::unique_ptr<DataChunk> ReadChunk(OdbcHandleStmt *hstmt);
+
+	SQLRETURN ReportError(OdbcHandleStmt *hstmt, const std::exception &ex);
 
 	SQLRETURN SetCurrentChunk(OdbcHandleStmt *hstmt);
 
@@ -103,6 +127,6 @@ private:
 
 	void SetRowStatus(idx_t row_idx, SQLINTEGER status);
 };
-} // namespace duckdb
+} // namespace duckdb_odbc
 
 #endif // ODBC_FETCH_HPP
