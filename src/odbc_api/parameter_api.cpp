@@ -3,7 +3,6 @@
 #include "api_info.hpp"
 #include "parameter_descriptor.hpp"
 
-
 using duckdb_odbc::idx_t;
 using duckdb_odbc::Load;
 using duckdb_odbc::LogicalType;

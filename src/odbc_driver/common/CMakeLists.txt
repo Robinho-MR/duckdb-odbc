@@ -9,7 +9,6 @@ add_library(
   odbc_interval.cpp
   odbc_utils.cpp)
 
-
 set(ALL_OBJECT_FILES
     ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:odbc_common>
     PARENT_SCOPE)

@@ -40,7 +40,8 @@ static SQLRETURN WriteStringDiag(const std::string &str, SQLWCHAR *character_att
 		return SQL_ERROR;
 	}
 
-	auto tup = duckdb_odbc::OdbcUtils::WriteStringUtf16(str, character_attribute_ptr, static_cast<size_t>(buffer_length));
+	auto tup =
+	    duckdb_odbc::OdbcUtils::WriteStringUtf16(str, character_attribute_ptr, static_cast<size_t>(buffer_length));
 	size_t written = tup.first;
 	auto &utf16_vec = tup.second;
 
@@ -81,7 +82,7 @@ static SQLRETURN GetDiagFieldInternal(SQLSMALLINT handle_type, SQLHANDLE handle,
 				return SQL_ERROR;
 			}
 			duckdb_odbc::Store<SQLLEN>(hdl->odbc_diagnostic->header.sql_diag_cursor_row_count,
-			                      (duckdb_odbc::data_ptr_t)diag_info_ptr);
+			                           (duckdb_odbc::data_ptr_t)diag_info_ptr);
 			return SQL_SUCCESS;
 		}
 		case SQL_DIAG_DYNAMIC_FUNCTION: {
@@ -98,17 +99,17 @@ static SQLRETURN GetDiagFieldInternal(SQLSMALLINT handle_type, SQLHANDLE handle,
 				return SQL_ERROR;
 			}
 			duckdb_odbc::Store<SQLINTEGER>(hdl->odbc_diagnostic->header.sql_diag_dynamic_function_code,
-			                          (duckdb_odbc::data_ptr_t)diag_info_ptr);
+			                               (duckdb_odbc::data_ptr_t)diag_info_ptr);
 			return SQL_SUCCESS;
 		}
 		case SQL_DIAG_NUMBER: {
 			duckdb_odbc::Store<SQLINTEGER>(static_cast<SQLINTEGER>(hdl->odbc_diagnostic->GetTotalRecords()),
-			                          (duckdb_odbc::data_ptr_t)diag_info_ptr);
+			                               (duckdb_odbc::data_ptr_t)diag_info_ptr);
 			return SQL_SUCCESS;
 		}
 		case SQL_DIAG_RETURNCODE: {
 			duckdb_odbc::Store<SQLRETURN>(hdl->odbc_diagnostic->header.sql_diag_return_code,
-			                         (duckdb_odbc::data_ptr_t)diag_info_ptr);
+			                              (duckdb_odbc::data_ptr_t)diag_info_ptr);
 			return SQL_SUCCESS;
 		}
 		case SQL_DIAG_ROW_COUNT: {
@@ -116,7 +117,8 @@ static SQLRETURN GetDiagFieldInternal(SQLSMALLINT handle_type, SQLHANDLE handle,
 			if (hdl->type != duckdb_odbc::OdbcHandleType::STMT) {
 				return SQL_ERROR;
 			}
-			duckdb_odbc::Store<SQLLEN>(hdl->odbc_diagnostic->header.sql_diag_return_code, (duckdb_odbc::data_ptr_t)diag_info_ptr);
+			duckdb_odbc::Store<SQLLEN>(hdl->odbc_diagnostic->header.sql_diag_return_code,
+			                           (duckdb_odbc::data_ptr_t)diag_info_ptr);
 			return SQL_SUCCESS;
 		}
 		default:
@@ -239,8 +241,8 @@ static SQLRETURN WriteStringWithLenInChars(const std::string &msg_str, SQLCHAR *
 
 static SQLRETURN WriteStringWithLenInChars(const std::string &msg_str, SQLWCHAR *message_text,
                                            SQLSMALLINT buffer_length_chars, SQLSMALLINT *text_length_chars_ptr) {
-	auto utf16_vec =
-	    duckdb_odbc::widechar::utf8_to_utf16_lenient(reinterpret_cast<const SQLCHAR *>(msg_str.c_str()), msg_str.length());
+	auto utf16_vec = duckdb_odbc::widechar::utf8_to_utf16_lenient(reinterpret_cast<const SQLCHAR *>(msg_str.c_str()),
+	                                                              msg_str.length());
 	size_t len_chars = 0;
 	if (message_text != nullptr && buffer_length_chars > 0) {
 		len_chars = std::min(utf16_vec.size(), static_cast<size_t>(buffer_length_chars - 1));
@@ -263,8 +265,8 @@ static SQLRETURN GetDiagRecInternal(SQLSMALLINT handle_type, SQLHANDLE handle, S
 	std::function<bool(duckdb_odbc::OdbcHandle *, duckdb_odbc::OdbcHandleType)> is_valid_type_func =
 	    [&](duckdb_odbc::OdbcHandle *hdl, duckdb_odbc::OdbcHandleType target_type) {
 		    if (hdl->type != target_type) {
-			    std::string msg_str("Handle type " + duckdb_odbc::OdbcHandleTypeToString(hdl->type) + " mismatch with " +
-			                        duckdb_odbc::OdbcHandleTypeToString(target_type));
+			    std::string msg_str("Handle type " + duckdb_odbc::OdbcHandleTypeToString(hdl->type) +
+			                        " mismatch with " + duckdb_odbc::OdbcHandleTypeToString(target_type));
 			    WriteStringWithLenInChars(msg_str, message_text, buffer_length, text_length_ptr);
 			    return false;
 		    }

@@ -94,7 +94,7 @@ SQLRETURN SQL_API SQLGetData(SQLHSTMT statement_handle, SQLUSMALLINT col_or_para
 	}
 
 	return duckdb_odbc::GetDataStmtResult(hstmt, col_or_param_num, target_type, target_value_ptr, buffer_length,
-	                                 str_len_or_ind_ptr);
+	                                      str_len_or_ind_ptr);
 }
 
 //===--------------------------------------------------------------------===//

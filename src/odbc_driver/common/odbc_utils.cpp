@@ -11,7 +11,6 @@
 #include <time.h>
 #endif //!_WIN32
 
-
 #include "handle_functions.hpp"
 #include "widechar.hpp"
 
@@ -287,8 +286,8 @@ size_t OdbcUtils::WriteStringUtf8(const std::string &str, SQLCHAR *out_buf, size
 
 std::pair<size_t, std::vector<SQLWCHAR>> OdbcUtils::WriteStringUtf16(const std::string &utf8_str, SQLWCHAR *out_buf,
                                                                      size_t buf_len_bytes) {
-	auto utf16_vec =
-	    duckdb_odbc::widechar::utf8_to_utf16_lenient(reinterpret_cast<const SQLCHAR *>(utf8_str.c_str()), utf8_str.length());
+	auto utf16_vec = duckdb_odbc::widechar::utf8_to_utf16_lenient(reinterpret_cast<const SQLCHAR *>(utf8_str.c_str()),
+	                                                              utf8_str.length());
 
 	if (out_buf != nullptr) {
 		size_t buf_len_even = static_cast<size_t>(buf_len_bytes);
@@ -340,7 +339,7 @@ int64_t duckdb_odbc::OdbcUtils::GetUTCOffsetMicrosFromOS(HSTMT hstmt_ptr, int64_
 		std::string msg = "FileTimeToSystemTime failed, input value: " + std::to_string(utc_micros) +
 		                  ", error code: " + std::to_string(GetLastError());
 		duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "timezone", msg, duckdb_odbc::SQLStateType::ST_HY000,
-		                            hstmt->dbc->GetDataSourceName());
+		                                 hstmt->dbc->GetDataSourceName());
 		return 0;
 	}
 
@@ -351,7 +350,7 @@ int64_t duckdb_odbc::OdbcUtils::GetUTCOffsetMicrosFromOS(HSTMT hstmt_ptr, int64_
 		std::string msg = "GetTimeZoneInformation failed, input value: " + std::to_string(utc_micros) +
 		                  ", error code: " + std::to_string(GetLastError());
 		duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "timezone", msg, duckdb_odbc::SQLStateType::ST_HY000,
-		                            hstmt->dbc->GetDataSourceName());
+		                                 hstmt->dbc->GetDataSourceName());
 		return 0;
 	}
 
@@ -362,7 +361,7 @@ int64_t duckdb_odbc::OdbcUtils::GetUTCOffsetMicrosFromOS(HSTMT hstmt_ptr, int64_
 		std::string msg = "SystemTimeToTzSpecificLocalTime failed, input value: " + std::to_string(utc_micros) +
 		                  ", error code: " + std::to_string(GetLastError());
 		duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "timezone", msg, duckdb_odbc::SQLStateType::ST_HY000,
-		                            hstmt->dbc->GetDataSourceName());
+		                                 hstmt->dbc->GetDataSourceName());
 		return 0;
 	}
 
@@ -373,7 +372,7 @@ int64_t duckdb_odbc::OdbcUtils::GetUTCOffsetMicrosFromOS(HSTMT hstmt_ptr, int64_
 		std::string msg = "SystemTimeToFileTime failed, input value: " + std::to_string(utc_micros) +
 		                  ", error code: " + std::to_string(GetLastError());
 		duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "timezone", msg, duckdb_odbc::SQLStateType::ST_HY000,
-		                            hstmt->dbc->GetDataSourceName());
+		                                 hstmt->dbc->GetDataSourceName());
 		return 0;
 	}
 
@@ -398,7 +397,7 @@ int64_t duckdb_odbc::OdbcUtils::GetUTCOffsetMicrosFromOS(HSTMT hstmt_ptr, int64_
 		std::string msg =
 		    "gmtime_r failed, input value: " + std::to_string(utc_micros) + ", error code: " + std::to_string(errno);
 		duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "timezone", msg, duckdb_odbc::SQLStateType::ST_HY000,
-		                            hstmt->dbc->GetDataSourceName());
+		                                 hstmt->dbc->GetDataSourceName());
 		return 0;
 	}
 
@@ -410,7 +409,7 @@ int64_t duckdb_odbc::OdbcUtils::GetUTCOffsetMicrosFromOS(HSTMT hstmt_ptr, int64_
 		std::string msg =
 		    "localtime_r failed, input value: " + std::to_string(utc_micros) + ", error code: " + std::to_string(errno);
 		duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "timezone", msg, duckdb_odbc::SQLStateType::ST_HY000,
-		                            hstmt->dbc->GetDataSourceName());
+		                                 hstmt->dbc->GetDataSourceName());
 		return 0;
 	}
 	// DST confuses mktime
@@ -422,7 +421,7 @@ int64_t duckdb_odbc::OdbcUtils::GetUTCOffsetMicrosFromOS(HSTMT hstmt_ptr, int64_
 		std::string msg = "mktime local failed, input value: " + std::to_string(utc_micros) +
 		                  ", error code: " + std::to_string(errno);
 		duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "timezone", msg, duckdb_odbc::SQLStateType::ST_HY000,
-		                            hstmt->dbc->GetDataSourceName());
+		                                 hstmt->dbc->GetDataSourceName());
 		return 0;
 	}
 	time_t utc_time = mktime(&utc_time_struct);
@@ -430,7 +429,7 @@ int64_t duckdb_odbc::OdbcUtils::GetUTCOffsetMicrosFromOS(HSTMT hstmt_ptr, int64_
 		std::string msg =
 		    "mktime utc failed, input value: " + std::to_string(utc_micros) + ", error code: " + std::to_string(errno);
 		duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "timezone", msg, duckdb_odbc::SQLStateType::ST_HY000,
-		                            hstmt->dbc->GetDataSourceName());
+		                                 hstmt->dbc->GetDataSourceName());
 		return 0;
 	}
 

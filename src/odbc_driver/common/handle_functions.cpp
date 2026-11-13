@@ -4,8 +4,8 @@
 #include "parameter_descriptor.hpp"
 
 SQLRETURN duckdb_odbc::SetDiagnosticRecord(OdbcHandle *handle, const SQLRETURN &ret, const std::string &component,
-                                      const std::string &msg, const SQLStateType &sqlstate_type,
-                                      const std::string &server_name) {
+                                           const std::string &msg, const SQLStateType &sqlstate_type,
+                                           const std::string &server_name) {
 	DiagRecord diag_rec(msg, sqlstate_type, server_name);
 
 	handle->odbc_diagnostic->FormatDiagnosticMessage(diag_rec, server_name, component);

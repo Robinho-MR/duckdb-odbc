@@ -51,7 +51,7 @@ SQLRETURN SQL_API SQLGetEnvAttr(SQLHENV environment_handle, SQLINTEGER attribute
 		break;
 	case SQL_ATTR_CP_MATCH:
 		return duckdb_odbc::SetDiagnosticRecord(env, SQL_SUCCESS_WITH_INFO, "SQLGetEnvAttr",
-		                                   "Optional feature not implemented.", SQLStateType::ST_HYC00, "");
+		                                        "Optional feature not implemented.", SQLStateType::ST_HYC00, "");
 	}
 	return SQL_SUCCESS;
 }
@@ -96,8 +96,8 @@ SQLRETURN SQL_API SQLSetEnvAttr(SQLHENV environment_handle, SQLINTEGER attribute
 			return SQL_SUCCESS;
 		default:
 			return duckdb_odbc::SetDiagnosticRecord(env, SQL_SUCCESS_WITH_INFO, "SQLSetEnvAttr",
-			                                   "ODBC version not supported: " + std::to_string(major_version),
-			                                   SQLStateType::ST_HY092, "");
+			                                        "ODBC version not supported: " + std::to_string(major_version),
+			                                        SQLStateType::ST_HY092, "");
 		}
 	}
 	case SQL_ATTR_CONNECTION_POOLING: {
@@ -110,26 +110,26 @@ SQLRETURN SQL_API SQLSetEnvAttr(SQLHENV environment_handle, SQLINTEGER attribute
 			return SQL_SUCCESS;
 		default:
 			return duckdb_odbc::SetDiagnosticRecord(env, SQL_SUCCESS_WITH_INFO, "SQLSetConnectAttr",
-			                                   "Connection pooling not supported: " + std::to_string(attribute),
-			                                   SQLStateType::ST_HY092, "");
+			                                        "Connection pooling not supported: " + std::to_string(attribute),
+			                                        SQLStateType::ST_HY092, "");
 		}
 	}
 	case SQL_ATTR_CP_MATCH:
 		return duckdb_odbc::SetDiagnosticRecord(env, SQL_SUCCESS_WITH_INFO, "SQLSetConnectAttr",
-		                                   "Optional feature not implemented.", SQLStateType::ST_HY092, "");
+		                                        "Optional feature not implemented.", SQLStateType::ST_HY092, "");
 	case SQL_ATTR_OUTPUT_NTS: /* SQLINTEGER */ {
 		auto output_nts = static_cast<SQLINTEGER>(reinterpret_cast<intptr_t>(value_ptr));
 		if (output_nts == SQL_TRUE) {
 			env->output_nts = SQL_TRUE;
 			return SQL_SUCCESS;
 		}
-		return duckdb_odbc::SetDiagnosticRecord(env, SQL_SUCCESS_WITH_INFO, "SQLSetConnectAttr",
-		                                   "Optional feature not implemented.  SQL_ATTR_OUTPUT_NTS must be SQL_TRUE",
-		                                   SQLStateType::ST_HY092, "");
+		return duckdb_odbc::SetDiagnosticRecord(
+		    env, SQL_SUCCESS_WITH_INFO, "SQLSetConnectAttr",
+		    "Optional feature not implemented.  SQL_ATTR_OUTPUT_NTS must be SQL_TRUE", SQLStateType::ST_HY092, "");
 	}
 	default:
 		return duckdb_odbc::SetDiagnosticRecord(env, SQL_SUCCESS_WITH_INFO, "SQLSetEnvAttr", "Invalid attribute value",
-		                                   SQLStateType::ST_HY024, "");
+		                                        SQLStateType::ST_HY024, "");
 	}
 }
 
@@ -138,7 +138,7 @@ static SQLRETURN WriteStringConnAttr(duckdb_odbc::OdbcHandleDbc *dbc, const std:
                                      SQLINTEGER *string_length) {
 	if (buffer_length < 0) {
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLGetConnectAttr", "Invalid string or buffer length",
-		                                   SQLStateType::ST_HY090, dbc->GetDataSourceName());
+		                                        SQLStateType::ST_HY090, dbc->GetDataSourceName());
 	}
 
 	size_t written =
@@ -150,8 +150,8 @@ static SQLRETURN WriteStringConnAttr(duckdb_odbc::OdbcHandleDbc *dbc, const std:
 
 	if (character_attribute_ptr != nullptr && written < str.length()) {
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_SUCCESS_WITH_INFO, "SQLGetConnectAttr",
-		                                   "String data, right truncated", SQLStateType::ST_01004,
-		                                   dbc->GetDataSourceName());
+		                                        "String data, right truncated", SQLStateType::ST_01004,
+		                                        dbc->GetDataSourceName());
 	}
 
 	return SQL_SUCCESS;
@@ -162,10 +162,11 @@ static SQLRETURN WriteStringConnAttr(duckdb_odbc::OdbcHandleDbc *dbc, const std:
                                      SQLINTEGER *string_length) {
 	if (buffer_length < 0) {
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLGetConnectAttr", "Invalid string or buffer length",
-		                                   SQLStateType::ST_HY090, dbc->GetDataSourceName());
+		                                        SQLStateType::ST_HY090, dbc->GetDataSourceName());
 	}
 
-	auto tup = duckdb_odbc::OdbcUtils::WriteStringUtf16(str, character_attribute_ptr, static_cast<size_t>(buffer_length));
+	auto tup =
+	    duckdb_odbc::OdbcUtils::WriteStringUtf16(str, character_attribute_ptr, static_cast<size_t>(buffer_length));
 	size_t written = tup.first;
 	auto &utf16_vec = tup.second;
 
@@ -175,8 +176,8 @@ static SQLRETURN WriteStringConnAttr(duckdb_odbc::OdbcHandleDbc *dbc, const std:
 
 	if (character_attribute_ptr != nullptr && written < utf16_vec.size()) {
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_SUCCESS_WITH_INFO, "SQLGetConnectAttr",
-		                                   "String data, right truncated", SQLStateType::ST_01004,
-		                                   dbc->GetDataSourceName());
+		                                        "String data, right truncated", SQLStateType::ST_01004,
+		                                        dbc->GetDataSourceName());
 	}
 	return SQL_SUCCESS;
 }
@@ -201,7 +202,7 @@ static SQLRETURN GetConnectAttrInternal(SQLHDBC connection_handle, SQLINTEGER at
 	}
 	case SQL_ATTR_ACCESS_MODE: {
 		duckdb_odbc::OdbcUtils::StoreWithLength<SQLUINTEGER, SQLINTEGER>(dbc->sql_attr_access_mode, value_ptr,
-		                                                            string_length_ptr);
+		                                                                 string_length_ptr);
 		return SQL_SUCCESS;
 	}
 	case SQL_ATTR_CURRENT_CATALOG: {
@@ -241,12 +242,13 @@ static SQLRETURN GetConnectAttrInternal(SQLHDBC connection_handle, SQLINTEGER at
 		return SQL_SUCCESS;
 	}
 	case SQL_ATTR_TXN_ISOLATION: {
-		duckdb_odbc::OdbcUtils::StoreWithLength<SQLUINTEGER, SQLINTEGER>(SQL_TXN_SERIALIZABLE, value_ptr, string_length_ptr);
+		duckdb_odbc::OdbcUtils::StoreWithLength<SQLUINTEGER, SQLINTEGER>(SQL_TXN_SERIALIZABLE, value_ptr,
+		                                                                 string_length_ptr);
 		return SQL_SUCCESS;
 	}
 	default:
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLGetConnectAttr", "Attribute not supported.",
-		                                   SQLStateType::ST_HY092, dbc->GetDataSourceName());
+		                                        SQLStateType::ST_HY092, dbc->GetDataSourceName());
 	}
 }
 
@@ -317,8 +319,9 @@ static SQLRETURN SetConnectAttrInternal(SQLHDBC connection_handle, SQLINTEGER at
 			try {
 				dbc->SetAutoCommit((ptrdiff_t)value_ptr == (ptrdiff_t)SQL_AUTOCOMMIT_ON);
 			} catch (std::exception &ex) {
-				return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLSetConnectAttr", duckdb_odbc::RawErrorMessage(ex),
-				                                   SQLStateType::ST_HY000, dbc->GetDataSourceName());
+				return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLSetConnectAttr",
+				                                        duckdb_odbc::RawErrorMessage(ex), SQLStateType::ST_HY000,
+				                                        dbc->GetDataSourceName());
 			}
 			return SQL_SUCCESS;
 		case SQL_ATTR_METADATA_ID: {
@@ -341,7 +344,7 @@ static SQLRETURN SetConnectAttrInternal(SQLHDBC connection_handle, SQLINTEGER at
 			return SQL_SUCCESS;
 		}
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLSetConnectAttr", "Invalid access mode.",
-		                                   SQLStateType::ST_HY024, dbc->GetDataSourceName());
+		                                        SQLStateType::ST_HY024, dbc->GetDataSourceName());
 	}
 #ifdef SQL_ATTR_ASYNC_DBC_EVENT
 	case SQL_ATTR_ASYNC_DBC_EVENT:
@@ -355,21 +358,22 @@ static SQLRETURN SetConnectAttrInternal(SQLHDBC connection_handle, SQLINTEGER at
 #endif
 	case SQL_ATTR_ASYNC_ENABLE: {
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLSetConnectAttr",
-		                                   "DuckDB does not support asynchronous events.", SQLStateType::ST_HY024,
-		                                   dbc->GetDataSourceName());
+		                                        "DuckDB does not support asynchronous events.", SQLStateType::ST_HY024,
+		                                        dbc->GetDataSourceName());
 	}
 	case SQL_ATTR_AUTO_IPD:
 	case SQL_ATTR_CONNECTION_DEAD: {
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLSetConnectAttr", "Read-only attribute.",
-		                                   SQLStateType::ST_HY092, dbc->GetDataSourceName());
+		                                        SQLStateType::ST_HY092, dbc->GetDataSourceName());
 	}
 	case SQL_ATTR_CONNECTION_TIMEOUT:
 		return SQL_SUCCESS;
 	case SQL_ATTR_CURRENT_CATALOG: {
 		if (dbc->conn) {
-			return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLSetConnectAttr",
-			                                   "Connection already established, the database name could not be set.",
-			                                   SQLStateType::ST_01S00, dbc->GetDataSourceName());
+			return duckdb_odbc::SetDiagnosticRecord(
+			    dbc, SQL_ERROR, "SQLSetConnectAttr",
+			    "Connection already established, the database name could not be set.", SQLStateType::ST_01S00,
+			    dbc->GetDataSourceName());
 		}
 		SetCurrentCatalog(dbc, reinterpret_cast<CHAR_TYPE *>(value_ptr), string_length);
 		return SQL_SUCCESS;
@@ -389,8 +393,8 @@ static SQLRETURN SetConnectAttrInternal(SQLHDBC connection_handle, SQLINTEGER at
 	}
 	default:
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_SUCCESS_WITH_INFO, "SQLSetConnectAttr",
-		                                   "Option value changed:" + std::to_string(attribute), SQLStateType::ST_01S02,
-		                                   dbc->GetDataSourceName());
+		                                        "Option value changed:" + std::to_string(attribute),
+		                                        SQLStateType::ST_01S02, dbc->GetDataSourceName());
 	}
 }
 
@@ -557,8 +561,8 @@ static SQLRETURN GetStmtAttrInternal(SQLHSTMT statement_handle, SQLINTEGER attri
 	case SQL_ATTR_USE_BOOKMARKS:
 	default:
 		return duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "SQLGetStmtAttr",
-		                                   "Unsupported attribute type:" + std::to_string(attribute),
-		                                   SQLStateType::ST_HY092, hstmt->dbc->GetDataSourceName());
+		                                        "Unsupported attribute type:" + std::to_string(attribute),
+		                                        SQLStateType::ST_HY092, hstmt->dbc->GetDataSourceName());
 	}
 }
 
@@ -656,8 +660,8 @@ static SQLRETURN SetStmtAttrInternal(SQLHSTMT statement_handle, SQLINTEGER attri
 	case SQL_ATTR_IMP_PARAM_DESC:
 	case SQL_ATTR_IMP_ROW_DESC: {
 		return duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "SQLSetStmtAttr",
-		                                   "Option value changed:" + std::to_string(attribute), SQLStateType::ST_HY017,
-		                                   hstmt->dbc->GetDataSourceName());
+		                                        "Option value changed:" + std::to_string(attribute),
+		                                        SQLStateType::ST_HY017, hstmt->dbc->GetDataSourceName());
 	}
 	case SQL_ATTR_PARAM_BIND_OFFSET_PTR: {
 		hstmt->param_desc->SetBindOffesetPtr((SQLLEN *)value_ptr);
@@ -667,8 +671,8 @@ static SQLRETURN SetStmtAttrInternal(SQLHSTMT statement_handle, SQLINTEGER attri
 		SQLULEN value = (SQLULEN)(uintptr_t)value_ptr;
 		if (value != SQL_CONCUR_LOCK) {
 			return duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_SUCCESS_WITH_INFO, "SQLSetStmtAttr",
-			                                   "Option value changed:" + std::to_string(attribute),
-			                                   SQLStateType::ST_01S02, hstmt->dbc->GetDataSourceName());
+			                                        "Option value changed:" + std::to_string(attribute),
+			                                        SQLStateType::ST_01S02, hstmt->dbc->GetDataSourceName());
 		}
 		return SQL_SUCCESS;
 	}
@@ -683,8 +687,8 @@ static SQLRETURN SetStmtAttrInternal(SQLHSTMT statement_handle, SQLINTEGER attri
 		default:
 			/* Invalid attribute value */
 			return duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "SQLSetStmtAttr",
-			                                   "Invalid attribute value: " + std::to_string(attribute),
-			                                   SQLStateType::ST_HY024, hstmt->dbc->GetDataSourceName());
+			                                        "Invalid attribute value: " + std::to_string(attribute),
+			                                        SQLStateType::ST_HY024, hstmt->dbc->GetDataSourceName());
 		}
 		hstmt->retrieve_data = value;
 		return SQL_SUCCESS;
@@ -700,8 +704,8 @@ static SQLRETURN SetStmtAttrInternal(SQLHSTMT statement_handle, SQLINTEGER attri
 			break;
 		default:
 			return duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_ERROR, "SQLSetStmtAttr",
-			                                   "Invalid attribute value:" + std::to_string(attribute),
-			                                   SQLStateType::ST_HY024, hstmt->dbc->GetDataSourceName());
+			                                        "Invalid attribute value:" + std::to_string(attribute),
+			                                        SQLStateType::ST_HY024, hstmt->dbc->GetDataSourceName());
 		}
 		hstmt->odbc_fetcher->cursor_scrollable = value;
 		return SQL_SUCCESS;
@@ -712,8 +716,8 @@ static SQLRETURN SetStmtAttrInternal(SQLHSTMT statement_handle, SQLINTEGER attri
 	}
 	default:
 		return duckdb_odbc::SetDiagnosticRecord(hstmt, SQL_SUCCESS_WITH_INFO, "SQLSetStmtAttr",
-		                                   "Option value changed:" + std::to_string(attribute), SQLStateType::ST_01S02,
-		                                   hstmt->dbc->GetDataSourceName());
+		                                        "Option value changed:" + std::to_string(attribute),
+		                                        SQLStateType::ST_01S02, hstmt->dbc->GetDataSourceName());
 	}
 
 	return SQL_SUCCESS;

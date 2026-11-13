@@ -43,8 +43,7 @@ const std::map<std::string, OptionInfo> &GetDuckDBOptions() {
 		auto &config = instance.GetConfig();
 		for (size_t i = 0; i < config.GetOptionCount(); i++) {
 			auto description = config.DescribeOption(i);
-			OptionInfo info {std::string(description.GetName()),
-			                 description.SupportsScope(cxx::SettingScope::GLOBAL)};
+			OptionInfo info {std::string(description.GetName()), description.SupportsScope(cxx::SettingScope::GLOBAL)};
 			options.emplace(StringUtil::Lower(info.name), info);
 			for (size_t alias_idx = 0; alias_idx < description.GetAliasCount(); alias_idx++) {
 				options.emplace(StringUtil::Lower(std::string(description.GetAliasByIndex(alias_idx))), info);

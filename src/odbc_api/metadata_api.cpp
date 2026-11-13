@@ -6,7 +6,6 @@
 #include "handle_functions.hpp"
 #include "widechar.hpp"
 
-
 #include <regex>
 
 using duckdb_odbc::LogicalTypeId;

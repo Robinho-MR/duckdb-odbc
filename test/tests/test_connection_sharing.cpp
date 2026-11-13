@@ -39,8 +39,8 @@ TEST_CASE("Test connections to the same database file share it", "[odbc]") {
 	std::string other_config = conn_str + ";threads=1";
 	SQLCHAR out[1024];
 	SQLSMALLINT out_len;
-	REQUIRE(SQLDriverConnect(dbc3, nullptr, ConvertToSQLCHAR(other_config.c_str()), SQL_NTS, out, sizeof(out),
-	                         &out_len, SQL_DRIVER_COMPLETE) == SQL_ERROR);
+	REQUIRE(SQLDriverConnect(dbc3, nullptr, ConvertToSQLCHAR(other_config.c_str()), SQL_NTS, out, sizeof(out), &out_len,
+	                         SQL_DRIVER_COMPLETE) == SQL_ERROR);
 	std::string state;
 	std::string message;
 	ACCESS_DIAGNOSTIC(state, message, dbc3, SQL_HANDLE_DBC);

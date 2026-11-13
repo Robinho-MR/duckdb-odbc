@@ -7,7 +7,6 @@
 #include "statement_functions.hpp"
 #include "widechar.hpp"
 
-
 // From ODBC Spec (ODBCVER >= 0x0300 and ODBCVER >= 0x0400)
 // https://github.com/microsoft/ODBC-Specification/blob/master/Windows/inc/sqlext.h
 // Needed for use with Power Query SDK and Power BI
@@ -24,7 +23,7 @@ using std::ptrdiff_t;
 static SQLRETURN SetDiagError(bool has_valid_handle, duckdb_odbc::OdbcHandleDbc *dbc) {
 	if (has_valid_handle) {
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLGetInfo", "Invalid string or buffer length",
-		                                   SQLStateType::ST_HY090, dbc->GetDataSourceName());
+		                                        SQLStateType::ST_HY090, dbc->GetDataSourceName());
 	} else {
 		return SQL_ERROR;
 	}
@@ -47,8 +46,9 @@ static SQLRETURN WriteStringInfo(SQLHDBC connection_handle, const std::string &s
 	}
 
 	if (character_attribute_ptr != nullptr && written < str.length()) {
-		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_SUCCESS_WITH_INFO, "SQLGetInfo", "String data, right truncated",
-		                                   SQLStateType::ST_01004, dbc->GetDataSourceName());
+		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_SUCCESS_WITH_INFO, "SQLGetInfo",
+		                                        "String data, right truncated", SQLStateType::ST_01004,
+		                                        dbc->GetDataSourceName());
 	}
 
 	return SQL_SUCCESS;
@@ -64,7 +64,8 @@ static SQLRETURN WriteStringInfo(SQLHDBC connection_handle, const std::string &s
 		return SetDiagError(has_valid_handle, dbc);
 	}
 
-	auto tup = duckdb_odbc::OdbcUtils::WriteStringUtf16(str, character_attribute_ptr, static_cast<size_t>(buffer_length));
+	auto tup =
+	    duckdb_odbc::OdbcUtils::WriteStringUtf16(str, character_attribute_ptr, static_cast<size_t>(buffer_length));
 	size_t written = tup.first;
 	auto &utf16_vec = tup.second;
 
@@ -73,8 +74,9 @@ static SQLRETURN WriteStringInfo(SQLHDBC connection_handle, const std::string &s
 	}
 
 	if (has_valid_handle && character_attribute_ptr != nullptr && written < utf16_vec.size()) {
-		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_SUCCESS_WITH_INFO, "SQLGetInfo", "String data, right truncated",
-		                                   SQLStateType::ST_01004, dbc->GetDataSourceName());
+		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_SUCCESS_WITH_INFO, "SQLGetInfo",
+		                                        "String data, right truncated", SQLStateType::ST_01004,
+		                                        dbc->GetDataSourceName());
 	}
 	return SQL_SUCCESS;
 }
@@ -98,8 +100,8 @@ static SQLRETURN GetInfoInternal(SQLHDBC connection_handle, SQLUSMALLINT info_ty
 		}
 
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_ERROR, "SQLGetInfo",
-		                                   "Invalid null value pointer for numeric info type.", SQLStateType::ST_HY024,
-		                                   dbc->GetDataSourceName());
+		                                        "Invalid null value pointer for numeric info type.",
+		                                        SQLStateType::ST_HY024, dbc->GetDataSourceName());
 	}
 
 	// Default strings: YES or NO
@@ -138,7 +140,8 @@ static SQLRETURN GetInfoInternal(SQLHDBC connection_handle, SQLUSMALLINT info_ty
 		return SQL_SUCCESS;
 	}
 	case SQL_ASYNC_DBC_FUNCTIONS: {
-		duckdb_odbc::OdbcUtils::StoreWithLength<SQLUINTEGER>(SQL_ASYNC_DBC_NOT_CAPABLE, info_value_ptr, string_length_ptr);
+		duckdb_odbc::OdbcUtils::StoreWithLength<SQLUINTEGER>(SQL_ASYNC_DBC_NOT_CAPABLE, info_value_ptr,
+		                                                     string_length_ptr);
 		return SQL_SUCCESS;
 	}
 	case SQL_ASYNC_MODE: {
@@ -148,7 +151,7 @@ static SQLRETURN GetInfoInternal(SQLHDBC connection_handle, SQLUSMALLINT info_ty
 #ifdef SQL_ASYNC_NOTIFICATION
 	case SQL_ASYNC_NOTIFICATION: {
 		duckdb_odbc::OdbcUtils::StoreWithLength<SQLUINTEGER>(SQL_ASYNC_NOTIFICATION_NOT_CAPABLE, info_value_ptr,
-		                                                string_length_ptr);
+		                                                     string_length_ptr);
 		return SQL_SUCCESS;
 	}
 #endif
@@ -430,7 +433,7 @@ static SQLRETURN GetInfoInternal(SQLHDBC connection_handle, SQLUSMALLINT info_ty
 #ifdef SQL_DRIVER_AWARE_POOLING_SUPPORTED
 	case SQL_DRIVER_AWARE_POOLING_SUPPORTED: {
 		duckdb_odbc::OdbcUtils::StoreWithLength<SQLUINTEGER>(SQL_DRIVER_AWARE_POOLING_NOT_CAPABLE, info_value_ptr,
-		                                                string_length_ptr);
+		                                                     string_length_ptr);
 		return SQL_SUCCESS;
 	}
 #endif
@@ -498,7 +501,8 @@ static SQLRETURN GetInfoInternal(SQLHDBC connection_handle, SQLUSMALLINT info_ty
 		                       string_length_ptr);
 	}
 	case SQL_FILE_USAGE: {
-		duckdb_odbc::OdbcUtils::StoreWithLength<SQLUSMALLINT>(SQL_FILE_NOT_SUPPORTED, info_value_ptr, string_length_ptr);
+		duckdb_odbc::OdbcUtils::StoreWithLength<SQLUSMALLINT>(SQL_FILE_NOT_SUPPORTED, info_value_ptr,
+		                                                      string_length_ptr);
 		return SQL_SUCCESS;
 	}
 	case SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES1: {
@@ -877,7 +881,7 @@ static SQLRETURN GetInfoInternal(SQLHDBC connection_handle, SQLUSMALLINT info_ty
 		// return SQL_SUCCESS, but with a record message
 		std::string msg = "Unrecognized attribute: " + std::to_string(info_type);
 		return duckdb_odbc::SetDiagnosticRecord(dbc, SQL_SUCCESS, "SQLGetInfo", msg, SQLStateType::ST_HY092,
-		                                   dbc->GetDataSourceName());
+		                                        dbc->GetDataSourceName());
 	}
 }
 
@@ -1002,7 +1006,7 @@ static SQLRETURN DataSourcesInternal(SQLHENV environment_handle, SQLUSMALLINT di
 	}
 
 	return duckdb_odbc::SetDiagnosticRecord(env, SQL_ERROR, "SQLDataSources", "Driver Manager only function",
-	                                   SQLStateType::ST_HY000, "");
+	                                        SQLStateType::ST_HY000, "");
 }
 
 /**
@@ -1050,5 +1054,5 @@ SQLRETURN SQL_API SQLDrivers(SQLHENV environment_handle, SQLUSMALLINT direction,
 	}
 
 	return duckdb_odbc::SetDiagnosticRecord(env, SQL_ERROR, "SQLDrivers", "Driver Manager only function",
-	                                   SQLStateType::ST_HY000, "");
+	                                        SQLStateType::ST_HY000, "");
 }

@@ -148,7 +148,7 @@ void OdbcHandleDbc::AfterStatement(const cxx::SqlStatement &statement) {
 
 //! OdbcPreparedStatement functions *******************************************
 duckdb_odbc::unique_ptr<duckdb_odbc::QueryResult> OdbcPreparedStatement::Execute(cxx::Connection &conn,
-                                                                       const vector<Value> &values) {
+                                                                                 const vector<Value> &values) {
 	if (prepared) {
 		return make_uniq<QueryResult>(prepared->Execute(values.data(), values.size()));
 	}

@@ -3,7 +3,6 @@
 #include "handle_functions.hpp"
 #include "api_info.hpp"
 
-
 using duckdb_odbc::idx_t;
 using duckdb_odbc::Load;
 using duckdb_odbc::LogicalType;
@@ -60,6 +59,6 @@ SQLRETURN SQL_API SQLBindParameter(SQLHSTMT statement_handle, SQLUSMALLINT param
 	}
 
 	return duckdb_odbc::BindParameterStmt(hstmt, parameter_number, input_output_type, value_type, parameter_type,
-	                                 column_size, decimal_digits, parameter_value_ptr, buffer_length,
-	                                 str_len_or_ind_ptr);
+	                                      column_size, decimal_digits, parameter_value_ptr, buffer_length,
+	                                      str_len_or_ind_ptr);
 }

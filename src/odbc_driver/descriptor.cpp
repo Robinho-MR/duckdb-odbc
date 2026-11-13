@@ -51,8 +51,8 @@ SQLRETURN OdbcHandleDesc::ReturnInvalidFieldIdentifier(bool is_readonly) {
 	if (is_readonly) {
 		msg += " (read-only field)";
 	}
-	return duckdb_odbc::SetDiagnosticRecord(this, SQL_ERROR, "SQLSetDescField", msg, duckdb_odbc::SQLStateType::ST_HY092,
-	                                   dbc->GetDataSourceName());
+	return duckdb_odbc::SetDiagnosticRecord(this, SQL_ERROR, "SQLSetDescField", msg,
+	                                        duckdb_odbc::SQLStateType::ST_HY092, dbc->GetDataSourceName());
 }
 
 SQLRETURN OdbcHandleDesc::SetDescField(SQLSMALLINT rec_number, SQLSMALLINT field_identifier, SQLPOINTER value_ptr,

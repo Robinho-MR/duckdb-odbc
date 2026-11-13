@@ -7,7 +7,6 @@
 #include "parameter_descriptor.hpp"
 #include "statement_functions.hpp"
 
-
 using duckdb_odbc::OdbcDiagnostic;
 using duckdb_odbc::OdbcUtils;
 using duckdb_odbc::SQLStateType;

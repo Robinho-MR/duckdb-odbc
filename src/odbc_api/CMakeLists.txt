@@ -16,7 +16,6 @@ add_library(
   info_api.cpp
   transaction_api.cpp)
 
-
 set(ALL_OBJECT_FILES
     ${ALL_OBJECT_FILES} $<TARGET_OBJECTS:odbc_api>
     PARENT_SCOPE)

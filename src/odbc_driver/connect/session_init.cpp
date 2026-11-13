@@ -65,14 +65,14 @@ SessionInitSQLFile SessionInit::ReadSQLFile(const std::string &session_init_sql_
 		std::string actual_sha256 = picosha2::bytes_to_hex_string(digest.begin(), digest.end());
 		if (actual_sha256 != session_init_sql_file_sha256) {
 			throw std::runtime_error("Session init SQL file SHA-256 mismatch, expected: " + expected_sha256 +
-			                      ", actual: " + actual_sha256);
+			                         ", actual: " + actual_sha256);
 		}
 	}
 
 	std::vector<std::string> parts = SplitByMarker(orig_file_text);
 	if (parts.size() > 2) {
 		throw std::runtime_error("Connection init marker: '" + SessionInitSQLFile::CONN_INIT_MARKER +
-		                      "' can only be specified once");
+		                         "' can only be specified once");
 	}
 
 	std::string db_init_sql = OdbcUtils::TrimString(parts.at(0));
