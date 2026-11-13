@@ -111,7 +111,7 @@ TEST_CASE("Test manual-commit mode", "[odbc]") {
 	EXECUTE_AND_CHECK("SQLFreeStmt (SQL_CLOSE)", hstmt1, SQLFreeStmt, hstmt1, SQL_CLOSE);
 
 	EXECUTE_AND_CHECK("SQLSetConnectAttr (SQL_ATTR_AUTOCOMMIT)", nullptr, SQLSetConnectAttr, dbc1, SQL_ATTR_AUTOCOMMIT,
-	                  ConvertToSQLPOINTER(SQL_AUTOCOMMIT_OFF), SQL_IS_UINTEGER);
+	                  (SQLPOINTER)SQL_AUTOCOMMIT_OFF, SQL_IS_UINTEGER);
 
 	// rolled back
 	EXEC_SQL(hstmt1, "INSERT INTO tx VALUES (1)");
@@ -139,7 +139,7 @@ TEST_CASE("Test manual-commit mode", "[odbc]") {
 
 	// switching back to auto-commit commits the open transaction
 	EXECUTE_AND_CHECK("SQLSetConnectAttr (SQL_ATTR_AUTOCOMMIT)", nullptr, SQLSetConnectAttr, dbc1, SQL_ATTR_AUTOCOMMIT,
-	                  ConvertToSQLPOINTER(SQL_AUTOCOMMIT_ON), SQL_IS_UINTEGER);
+	                  (SQLPOINTER)SQL_AUTOCOMMIT_ON, SQL_IS_UINTEGER);
 	REQUIRE(FetchCount(hstmt2, "SELECT count(*) FROM tx") == 3);
 
 	EXECUTE_AND_CHECK("SQLFreeHandle (HSTMT)", hstmt1, SQLFreeHandle, SQL_HANDLE_STMT, hstmt1);
