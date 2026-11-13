@@ -461,7 +461,7 @@ jobs:
         run: |
           for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.ARM64 -property installationPath`) do set VS_INSTALL=%%i
           call "%VS_INSTALL%\VC\Auxiliary\Build\vcvarsamd64_arm64.bat" || exit /b 1
-          python scripts\build_duckdb.py --install-dir build\duckdb\install --generator "NMake Makefiles" || exit /b 1
+          python scripts\build_duckdb.py --install-dir build\duckdb\install --generator "NMake Makefiles" --cmake-arg=-DDUCKDB_EXPLICIT_PLATFORM=windows_arm64 || exit /b 1
           mkdir build\release
           cd build\release
           cmake ../.. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DDUCKDB_ROOT=%GITHUB_WORKSPACE%\build\duckdb\install || exit /b 1

@@ -15,6 +15,8 @@
 #undef CreateDirectory
 #undef MoveFile
 #undef RemoveDirectory
+// an access right, which would shadow cxx::StatementType::DELETE
+#undef DELETE
 #endif
 
 #include "duckdb_cpp.hpp"
