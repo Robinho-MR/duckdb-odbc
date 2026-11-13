@@ -48,11 +48,17 @@ struct ArrowSchema;
 struct ArrowArray;
 struct ArrowArrayStream;
 
-// <windows.h> defines DELETE, which StatementType names: keep the macro out of this header, whatever the include order.
+// <windows.h> defines DELETE and IGNORE, which StatementType and FunctionCollationHandling name: keep the macros out of
+// this header, whatever the include order.
 #ifdef DELETE
 #pragma push_macro("DELETE")
 #undef DELETE
 #define DUCKDB_CPP_RESTORE_DELETE_MACRO
+#endif
+#ifdef IGNORE
+#pragma push_macro("IGNORE")
+#undef IGNORE
+#define DUCKDB_CPP_RESTORE_IGNORE_MACRO
 #endif
 
 namespace duckdb {
@@ -7612,4 +7618,8 @@ inline auto PreparedStatement::Execute(const std::vector<NamedParam> &parameters
 #ifdef DUCKDB_CPP_RESTORE_DELETE_MACRO
 #pragma pop_macro("DELETE")
 #undef DUCKDB_CPP_RESTORE_DELETE_MACRO
+#endif
+#ifdef DUCKDB_CPP_RESTORE_IGNORE_MACRO
+#pragma pop_macro("IGNORE")
+#undef DUCKDB_CPP_RESTORE_IGNORE_MACRO
 #endif
