@@ -2,6 +2,7 @@
 #include "include/odbc_test_common.h"
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include <vector>
 #include <odbcinst.h>
 #include "widechar.hpp"

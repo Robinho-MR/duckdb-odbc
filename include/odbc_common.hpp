@@ -21,18 +21,30 @@
 
 #include "duckdb_cpp.hpp"
 
+// the standard headers the driver relies on, which DuckDB's internal headers used to pull in
 #include <algorithm>
+#include <array>
+#include <atomic>
 #include <cctype>
+#include <cmath>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <deque>
+#include <functional>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <set>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
