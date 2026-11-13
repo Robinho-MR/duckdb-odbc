@@ -1,18 +1,17 @@
 #ifndef API_INFO_HPP
 #define API_INFO_HPP
 
-#include "duckdb.hpp"
+#include "odbc_common.hpp"
 
 #include <sql.h>
 #include <sqltypes.h>
 #include <sqlext.h>
 #include <unordered_set>
 #include <set>
-#include "duckdb/common/vector.hpp"
 
 #define NUM_FUNC_SUPPORTED 4000
 
-namespace duckdb {
+namespace duckdb_odbc {
 
 struct OdbcTypeInfo {
 public:
@@ -65,7 +64,7 @@ public:
 
 	static SQLRETURN GetFunctions30(SQLHDBC connection_handle, SQLUSMALLINT function_id, SQLUSMALLINT *supported_ptr);
 
-	static SQLSMALLINT FindRelatedSQLType(duckdb::LogicalTypeId type_id);
+	static SQLSMALLINT FindRelatedSQLType(duckdb_odbc::LogicalTypeId type_id);
 
 	static void FindDataType(SQLSMALLINT data_type, vector<OdbcTypeInfo> &vec_types);
 
@@ -79,14 +78,14 @@ public:
 
 	static bool IsNumericInfoType(SQLUSMALLINT info_type);
 
-	static uint8_t GetTemporalPrecision(duckdb::LogicalTypeId type_id);
+	static uint8_t GetTemporalPrecision(duckdb_odbc::LogicalTypeId type_id);
 
-	static SQLINTEGER GetColumnSize(const duckdb::LogicalType &logical_type);
+	static SQLINTEGER GetColumnSize(const OdbcType &logical_type);
 
-	static SQLINTEGER GetDisplaySize(const duckdb::LogicalType &logical_type);
+	static SQLINTEGER GetDisplaySize(const OdbcType &logical_type);
 
 }; // end ApiInfo struct
 
-} // namespace duckdb
+} // namespace duckdb_odbc
 
 #endif // API_INFO_HPP

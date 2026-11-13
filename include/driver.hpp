@@ -3,10 +3,10 @@
 
 #include "duckdb_odbc.hpp"
 
-namespace duckdb {
+namespace duckdb_odbc {
 
 SQLRETURN FreeHandle(SQLSMALLINT handle_type, SQLHANDLE handle);
 
-} // namespace duckdb
+} // namespace duckdb_odbc
 
 #endif

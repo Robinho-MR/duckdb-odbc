@@ -2,6 +2,7 @@
 #include "include/odbc_test_common.h"
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include <vector>
 #include <odbcinst.h>
 #include "widechar.hpp"
@@ -340,7 +341,7 @@ SQLCHAR *ConvertToSQLCHAR(const std::string &str) {
 }
 
 std::vector<SQLWCHAR> ConvertToSQLWCHAR(const char *str) {
-	return duckdb::widechar::utf8_to_utf16_lenient(reinterpret_cast<const SQLCHAR *>(str), std::strlen(str));
+	return duckdb_odbc::widechar::utf8_to_utf16_lenient(reinterpret_cast<const SQLCHAR *>(str), std::strlen(str));
 }
 
 std::vector<SQLWCHAR> ConvertToSQLWCHARNTS(const char *str) {
@@ -350,7 +351,7 @@ std::vector<SQLWCHAR> ConvertToSQLWCHARNTS(const char *str) {
 }
 
 std::vector<SQLWCHAR> ConvertToSQLWCHAR(const std::string &str) {
-	return duckdb::widechar::utf8_to_utf16_lenient(reinterpret_cast<const SQLCHAR *>(str.data()), str.length());
+	return duckdb_odbc::widechar::utf8_to_utf16_lenient(reinterpret_cast<const SQLCHAR *>(str.data()), str.length());
 }
 
 std::vector<SQLWCHAR> ConvertToSQLWCHARNTS(const std::string &str) {
@@ -364,8 +365,8 @@ std::string ConvertToString(SQLCHAR *str) {
 }
 
 std::string ConvertToString(SQLWCHAR *str) {
-	size_t len = duckdb::widechar::utf16_length(str);
-	auto vec = duckdb::widechar::utf16_to_utf8_lenient(str, len);
+	size_t len = duckdb_odbc::widechar::utf16_length(str);
+	auto vec = duckdb_odbc::widechar::utf16_to_utf8_lenient(str, len);
 	return std::string(reinterpret_cast<char *>(vec.data()), vec.size());
 }
 
@@ -391,7 +392,7 @@ std::string ConvertHexToString(SQLCHAR val[16], int precision) {
 }
 
 std::string GetTesterDirectory() {
-	duckdb::unique_ptr<duckdb::FileSystem> fs = duckdb::FileSystem::CreateLocal();
+	auto fs = LocalFileSystem::Create();
 	auto cwd = fs->GetWorkingDirectory();
 	std::string current_directory = cwd + "/test/sql/storage_version/storage_version.db";
 	if (!fs->FileExists(current_directory)) {

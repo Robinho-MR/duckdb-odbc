@@ -6,48 +6,49 @@
 #include "row_descriptor.hpp"
 #include "handle_functions.hpp"
 
-#include "duckdb/common/vector.hpp"
-
-using duckdb::ApiInfo;
-using duckdb::DescHeader;
-using duckdb::DescRecord;
-using duckdb::OdbcHandleDesc;
-using duckdb::OdbcInterval;
-using duckdb::SQLStateType;
-using duckdb::vector;
+using duckdb_odbc::ApiInfo;
+using duckdb_odbc::DescHeader;
+using duckdb_odbc::DescRecord;
+using duckdb_odbc::OdbcHandleDesc;
+using duckdb_odbc::OdbcInterval;
+using duckdb_odbc::SQLStateType;
+using duckdb_odbc::vector;
 
 template <typename INT_TYPE>
-static SQLRETURN WriteStringDesc(const std::string &caller_name, duckdb::OdbcHandleDesc *desc, const std::string &str,
-                                 SQLCHAR *character_attribute_ptr, INT_TYPE buffer_length, INT_TYPE *string_length) {
+static SQLRETURN WriteStringDesc(const std::string &caller_name, duckdb_odbc::OdbcHandleDesc *desc,
+                                 const std::string &str, SQLCHAR *character_attribute_ptr, INT_TYPE buffer_length,
+                                 INT_TYPE *string_length) {
 	if (buffer_length < 0) {
-		return duckdb::SetDiagnosticRecord(desc, SQL_ERROR, caller_name, "Invalid string or buffer length",
-		                                   SQLStateType::ST_HY090, "");
+		return duckdb_odbc::SetDiagnosticRecord(desc, SQL_ERROR, caller_name, "Invalid string or buffer length",
+		                                        SQLStateType::ST_HY090, "");
 	}
 
 	size_t written =
-	    duckdb::OdbcUtils::WriteStringUtf8(str, character_attribute_ptr, static_cast<size_t>(buffer_length));
+	    duckdb_odbc::OdbcUtils::WriteStringUtf8(str, character_attribute_ptr, static_cast<size_t>(buffer_length));
 
 	if (string_length != nullptr) {
 		*string_length = static_cast<INT_TYPE>(str.length());
 	}
 
 	if (character_attribute_ptr != nullptr && written < str.length()) {
-		return duckdb::SetDiagnosticRecord(desc, SQL_SUCCESS_WITH_INFO, caller_name, "String data, right truncated",
-		                                   SQLStateType::ST_01004, "");
+		return duckdb_odbc::SetDiagnosticRecord(desc, SQL_SUCCESS_WITH_INFO, caller_name,
+		                                        "String data, right truncated", SQLStateType::ST_01004, "");
 	}
 
 	return SQL_SUCCESS;
 }
 
 template <typename INT_TYPE>
-static SQLRETURN WriteStringDesc(const std::string &caller_name, duckdb::OdbcHandleDesc *desc, const std::string &str,
-                                 SQLWCHAR *character_attribute_ptr, INT_TYPE buffer_length, INT_TYPE *string_length) {
+static SQLRETURN WriteStringDesc(const std::string &caller_name, duckdb_odbc::OdbcHandleDesc *desc,
+                                 const std::string &str, SQLWCHAR *character_attribute_ptr, INT_TYPE buffer_length,
+                                 INT_TYPE *string_length) {
 	if (buffer_length < 0) {
-		return duckdb::SetDiagnosticRecord(desc, SQL_ERROR, caller_name, "Invalid string or buffer length",
-		                                   SQLStateType::ST_HY090, "");
+		return duckdb_odbc::SetDiagnosticRecord(desc, SQL_ERROR, caller_name, "Invalid string or buffer length",
+		                                        SQLStateType::ST_HY090, "");
 	}
 
-	auto tup = duckdb::OdbcUtils::WriteStringUtf16(str, character_attribute_ptr, static_cast<size_t>(buffer_length));
+	auto tup =
+	    duckdb_odbc::OdbcUtils::WriteStringUtf16(str, character_attribute_ptr, static_cast<size_t>(buffer_length));
 	size_t written = tup.first;
 	auto &utf16_vec = tup.second;
 
@@ -56,8 +57,8 @@ static SQLRETURN WriteStringDesc(const std::string &caller_name, duckdb::OdbcHan
 	}
 
 	if (character_attribute_ptr != nullptr && written < utf16_vec.size()) {
-		return duckdb::SetDiagnosticRecord(desc, SQL_SUCCESS_WITH_INFO, caller_name, "String data, right truncated",
-		                                   SQLStateType::ST_01004, "");
+		return duckdb_odbc::SetDiagnosticRecord(desc, SQL_SUCCESS_WITH_INFO, caller_name,
+		                                        "String data, right truncated", SQLStateType::ST_01004, "");
 	}
 	return SQL_SUCCESS;
 }
@@ -69,16 +70,16 @@ static SQLRETURN WriteStringDesc(const std::string &caller_name, duckdb::OdbcHan
 template <typename CHAR_TYPE>
 static SQLRETURN GetDescFieldInternal(SQLHDESC descriptor_handle, SQLSMALLINT rec_number, SQLSMALLINT field_identifier,
                                       SQLPOINTER value_ptr, SQLINTEGER buffer_length, SQLINTEGER *string_length_ptr) {
-	duckdb::OdbcHandleDesc *desc = nullptr;
+	duckdb_odbc::OdbcHandleDesc *desc = nullptr;
 	SQLRETURN ret = ConvertDescriptor(descriptor_handle, desc);
 	if (ret != SQL_SUCCESS) {
 		return ret;
 	}
 
-	if (duckdb::ApiInfo::IsNumericDescriptorField(field_identifier) && value_ptr == nullptr) {
-		return duckdb::SetDiagnosticRecord(desc, SQL_ERROR, "SQLGetDescField",
-		                                   "Invalid null value pointer for descriptor numeric field",
-		                                   duckdb::SQLStateType::ST_HY009, desc->dbc->GetDataSourceName());
+	if (duckdb_odbc::ApiInfo::IsNumericDescriptorField(field_identifier) && value_ptr == nullptr) {
+		return duckdb_odbc::SetDiagnosticRecord(desc, SQL_ERROR, "SQLGetDescField",
+		                                        "Invalid null value pointer for descriptor numeric field",
+		                                        duckdb_odbc::SQLStateType::ST_HY009, desc->dbc->GetDataSourceName());
 	}
 
 	// descriptor header fields
@@ -128,10 +129,10 @@ static SQLRETURN GetDescFieldInternal(SQLHDESC descriptor_handle, SQLSMALLINT re
 	}
 
 	if (rec_number <= 0 || rec_number > (SQLSMALLINT)desc->records.size()) {
-		return duckdb::SetDiagnosticRecord(desc, SQL_ERROR, "SQLGetDescField", "Invalid descriptor index",
-		                                   duckdb::SQLStateType::ST_07009, desc->dbc->GetDataSourceName());
+		return duckdb_odbc::SetDiagnosticRecord(desc, SQL_ERROR, "SQLGetDescField", "Invalid descriptor index",
+		                                        duckdb_odbc::SQLStateType::ST_07009, desc->dbc->GetDataSourceName());
 	}
-	duckdb::idx_t rec_idx = rec_number - 1;
+	duckdb_odbc::idx_t rec_idx = rec_number - 1;
 
 	// checking descriptor record fields
 	switch (field_identifier) {
@@ -406,7 +407,7 @@ SQLRETURN SQL_API SQLGetDescFieldW(SQLHDESC descriptor_handle, SQLSMALLINT rec_n
 
 SQLRETURN SQL_API SQLSetDescField(SQLHDESC descriptor_handle, SQLSMALLINT rec_number, SQLSMALLINT field_identifier,
                                   SQLPOINTER value_ptr, SQLINTEGER buffer_length) {
-	duckdb::OdbcHandleDesc *desc = nullptr;
+	duckdb_odbc::OdbcHandleDesc *desc = nullptr;
 	SQLRETURN ret = ConvertDescriptor(descriptor_handle, desc);
 	if (ret != SQL_SUCCESS) {
 		return ret;
@@ -424,7 +425,7 @@ static SQLRETURN GetDescRecInternal(SQLHDESC descriptor_handle, SQLSMALLINT rec_
                                     SQLSMALLINT buffer_length, SQLSMALLINT *string_length_ptr, SQLSMALLINT *type_ptr,
                                     SQLSMALLINT *sub_type_ptr, SQLLEN *length_ptr, SQLSMALLINT *precision_ptr,
                                     SQLSMALLINT *scale_ptr, SQLSMALLINT *nullable_ptr) {
-	duckdb::OdbcHandleDesc *desc = nullptr;
+	duckdb_odbc::OdbcHandleDesc *desc = nullptr;
 	SQLRETURN ret = ConvertDescriptor(descriptor_handle, desc);
 	if (ret != SQL_SUCCESS) {
 		return ret;
@@ -446,24 +447,25 @@ static SQLRETURN GetDescRecInternal(SQLHDESC descriptor_handle, SQLSMALLINT rec_
 
 	ret = WriteStringDesc("SQLGetDescField", desc, desc_record->sql_desc_name, name, buffer_length, string_length_ptr);
 	if (type_ptr) {
-		duckdb::Store<SQLSMALLINT>(sql_type, (duckdb::data_ptr_t)type_ptr);
+		duckdb_odbc::Store<SQLSMALLINT>(sql_type, (duckdb_odbc::data_ptr_t)type_ptr);
 	}
 	if (sql_type == SQL_DATETIME || sql_type == SQL_INTERVAL) {
 		if (sub_type_ptr) {
-			duckdb::Store<SQLSMALLINT>(desc_record->sql_desc_datetime_interval_code, (duckdb::data_ptr_t)sub_type_ptr);
+			duckdb_odbc::Store<SQLSMALLINT>(desc_record->sql_desc_datetime_interval_code,
+			                                (duckdb_odbc::data_ptr_t)sub_type_ptr);
 		}
 	}
 	if (length_ptr) {
-		duckdb::Store<SQLSMALLINT>(desc_record->sql_desc_octet_length, (duckdb::data_ptr_t)length_ptr);
+		duckdb_odbc::Store<SQLSMALLINT>(desc_record->sql_desc_octet_length, (duckdb_odbc::data_ptr_t)length_ptr);
 	}
 	if (precision_ptr) {
-		duckdb::Store<SQLSMALLINT>(desc_record->sql_desc_precision, (duckdb::data_ptr_t)precision_ptr);
+		duckdb_odbc::Store<SQLSMALLINT>(desc_record->sql_desc_precision, (duckdb_odbc::data_ptr_t)precision_ptr);
 	}
 	if (scale_ptr) {
-		duckdb::Store<SQLSMALLINT>(desc_record->sql_desc_scale, (duckdb::data_ptr_t)scale_ptr);
+		duckdb_odbc::Store<SQLSMALLINT>(desc_record->sql_desc_scale, (duckdb_odbc::data_ptr_t)scale_ptr);
 	}
 	if (nullable_ptr) {
-		duckdb::Store<SQLSMALLINT>(desc_record->sql_desc_nullable, (duckdb::data_ptr_t)nullable_ptr);
+		duckdb_odbc::Store<SQLSMALLINT>(desc_record->sql_desc_nullable, (duckdb_odbc::data_ptr_t)nullable_ptr);
 	}
 	return ret;
 }
@@ -504,20 +506,20 @@ SQLRETURN SQL_API SQLGetDescRecW(SQLHDESC descriptor_handle, SQLSMALLINT rec_num
 SQLRETURN SQL_API SQLSetDescRec(SQLHDESC descriptor_handle, SQLSMALLINT rec_number, SQLSMALLINT type,
                                 SQLSMALLINT sub_type, SQLLEN length, SQLSMALLINT precision, SQLSMALLINT scale,
                                 SQLPOINTER data_ptr, SQLLEN *string_length_ptr, SQLLEN *indicator_ptr) {
-	duckdb::OdbcHandleDesc *desc = nullptr;
+	duckdb_odbc::OdbcHandleDesc *desc = nullptr;
 	SQLRETURN ret = ConvertDescriptor(descriptor_handle, desc);
 	if (ret != SQL_SUCCESS) {
 		return ret;
 	}
 
 	if (desc->IsIRD()) {
-		return duckdb::SetDiagnosticRecord(desc, SQL_ERROR, "SQLSetDescRec",
-		                                   "Cannot modify an implementation row descriptor",
-		                                   duckdb::SQLStateType::ST_HY016, desc->dbc->GetDataSourceName());
+		return duckdb_odbc::SetDiagnosticRecord(desc, SQL_ERROR, "SQLSetDescRec",
+		                                        "Cannot modify an implementation row descriptor",
+		                                        duckdb_odbc::SQLStateType::ST_HY016, desc->dbc->GetDataSourceName());
 	}
 	if (rec_number <= 0) {
-		return duckdb::SetDiagnosticRecord(desc, SQL_ERROR, "SQLSetDescRec", "Invalid descriptor index",
-		                                   duckdb::SQLStateType::ST_07009, desc->dbc->GetDataSourceName());
+		return duckdb_odbc::SetDiagnosticRecord(desc, SQL_ERROR, "SQLSetDescRec", "Invalid descriptor index",
+		                                        duckdb_odbc::SQLStateType::ST_07009, desc->dbc->GetDataSourceName());
 	}
 	if (rec_number > desc->header.sql_desc_count) {
 		desc->AddMoreRecords(rec_number);
@@ -573,15 +575,15 @@ SQLRETURN SQL_API SQLCopyDesc(SQLHDESC source_desc_handle, SQLHDESC target_desc_
 	// Check if source descriptor is an APD, ARD
 	for (auto stmt : source_desc->dbc->vec_stmt_ref) {
 		if (target_desc == stmt->row_desc->ird.get()) {
-			return duckdb::SetDiagnosticRecord(target_desc, SQL_ERROR, "SQLCopyDesc",
-			                                   "Cannot modify an implementation row descriptor.",
-			                                   duckdb::SQLStateType::ST_HY016, target_desc->dbc->GetDataSourceName());
+			return duckdb_odbc::SetDiagnosticRecord(
+			    target_desc, SQL_ERROR, "SQLCopyDesc", "Cannot modify an implementation row descriptor.",
+			    duckdb_odbc::SQLStateType::ST_HY016, target_desc->dbc->GetDataSourceName());
 		}
 		if (source_desc == stmt->row_desc->ird.get()) {
 			if (!stmt->IsPrepared()) {
-				return duckdb::SetDiagnosticRecord(
+				return duckdb_odbc::SetDiagnosticRecord(
 				    source_desc, SQL_ERROR, "SQLCopyDesc", "Associated statement is not prepared.",
-				    duckdb::SQLStateType::ST_HY007, source_desc->dbc->GetDataSourceName());
+				    duckdb_odbc::SQLStateType::ST_HY007, source_desc->dbc->GetDataSourceName());
 			}
 		}
 	}
